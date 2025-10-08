@@ -248,20 +248,25 @@ async def process_non_streaming_response(request: ChatRequest, access_token: str
             timeout=300,
         ) as response:
             async for line in response.aiter_lines():
-                if line:
-                    if line.startswith("data:"):
-                        json_str = line[6:]  # 去掉 "data: " 前缀
-                        json_object = json.loads(json_str)
-                        if json_object.get("data", {}).get("phase") == "answer":
-                            if json_object.get("data").get("delta_content"):
-                                content = json_object.get("data").get("delta_content")
-                            else:
-                                content = ""
-                            full_response += content
-                        elif json_object.get("data", {}).get("phase") == "other":
-                            usage = json_object.get("data").get("usage", {})
-                            content = json_object.get("data").get("delta_content", "")
-                            full_response += content
+                if not line or not line.startswith("data:"):
+                    continue
+                json_str = line[6:]  # 去掉 "data: " 前缀
+                stripped = json_str.strip()
+                if not stripped:
+                    continue
+                if stripped == "[DONE]":
+                    break
+                json_object = json.loads(json_str)
+                if json_object.get("data", {}).get("phase") == "answer":
+                    if json_object.get("data").get("delta_content"):
+                        content = json_object.get("data").get("delta_content")
+                    else:
+                        content = ""
+                    full_response += content
+                elif json_object.get("data", {}).get("phase") == "other":
+                    usage = json_object.get("data").get("usage", {})
+                    content = json_object.get("data").get("delta_content", "")
+                    full_response += content
     return {
         "id": f"chatcmpl-{uuid.uuid4()}",
         "object": "chat.completion",
