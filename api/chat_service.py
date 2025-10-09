@@ -83,13 +83,13 @@ def getfeatures(model: str, streaming: bool) -> Dict[str, bool]:
         }
 
         mcp_servers = []
-        if model in ["glm-4.6-search", "glm-4.6-advanced-search"]:
+        if model in ["GLM-4.6-search", "GLM-4.6-advanced-search"]:
             features["web_search"] = True
             features["auto_web_search"] = True
             features["preview_mode"] = True
-        if model == "glm-4.6-nothinking":
+        if model == "GLM-4.6-nothinking":
             features["enable_thinking"] = False
-        if model == "glm-4.6-advanced-search":
+        if model == "GLM-4.6-advanced-search":
             mcp_servers = [
                 "advanced-search",
             ]
