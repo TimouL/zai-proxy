@@ -13,6 +13,23 @@ router = APIRouter()
 ALLOWED_MODELS = get_settings().ALLOWED_MODELS
 
 
+def mask_token(token: str) -> str:
+    """
+    对 Token 进行掩码处理,只显示首8位和末8位,中间用4个*号表示。
+
+    Args:
+        token: 需要掩码的 Token 字符串
+
+    Returns:
+        掩码后的 Token 字符串
+    """
+    if not token or len(token) <= 16:
+        # 如果 Token 长度不足16位,全部用****表示
+        return "****"
+
+    return f"{token[:8]}****{token[-8:]}"
+
+
 @router.options("/chat/completions")
 async def chat_completions_options():
     return Response(
@@ -41,7 +58,7 @@ async def chat_completions(request: Request, chat_request: ChatRequest):
         else None
     )
     if access_token:
-        logger.info(f"Access Token: {access_token}")
+        logger.info(f"Access Token: {mask_token(access_token)}")
     else:
         logger.info("No Access Token provided")
         return Response(
