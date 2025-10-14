@@ -1,6 +1,7 @@
 import time
 import hmac
 import hashlib
+import base64
 
 
 def generate_signature(e: str, t: str) -> dict:
@@ -8,8 +9,8 @@ def generate_signature(e: str, t: str) -> dict:
     根据输入参数 e 和 t 生成签名和时间戳。
 
     Args:
-        e: 第一个输入参数。
-        t: 第二个输入参数。
+        e: 第一个输入参数。e = "requestId,{request_id},timestamp,{timestamp},user_id,{user_id}"
+        t: 第二个输入参数(content,将被Base64编码)。
 
     Returns:
         一个包含 'signature' 和 'timestamp' 的字典。
@@ -18,23 +19,26 @@ def generate_signature(e: str, t: str) -> dict:
     timestamp_ms = int(time.time() * 1000)
     # timestamp_ms = 1759746422192
 
-    # 2. 拼接字符串
-    message_string = f"{e}|{t}|{timestamp_ms}"
+    # 2. 对 content 进行 Base64 编码
+    content_base64 = base64.b64encode(t.encode('utf-8')).decode('ascii')
 
-    # 3. 计算 n
+    # 3. 拼接字符串
+    message_string = f"{e}|{content_base64}|{timestamp_ms}"
+
+    # 4. 计算 n
     n = timestamp_ms // (5 * 60 * 1000)
 
-    # 4. 计算中间密钥 o (HMAC-SHA256)
+    # 5. 计算中间密钥 o (HMAC-SHA256)
     key1 = "junjie".encode("utf-8")
     msg1 = str(n).encode("utf-8")
     intermediate_key = hmac.new(key1, msg1, hashlib.sha256).hexdigest()
 
-    # 5. 计算最终签名 (HMAC-SHA256)
+    # 6. 计算最终签名 (HMAC-SHA256)
     key2 = intermediate_key.encode("utf-8")
     msg2 = message_string.encode("utf-8")
     final_signature = hmac.new(key2, msg2, hashlib.sha256).hexdigest()
 
-    # 6. 返回结果
+    # 7. 返回结果
     return {"signature": final_signature, "timestamp": timestamp_ms}
 
 
